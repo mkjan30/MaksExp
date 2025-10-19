@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Expense Tracker Pro</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            color: #000000;
+            min-height: 100vh;
+            padding: 0;
+            padding-bottom: 80px;
+        }
+        
+        body.dark-mode { background: #000000; color: #ffffff; }
+        
+        .container { max-width: 100%; margin: 0 auto; }
+        
+        .header {
+            padding: 20px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        body.dark-mode .header { background: #1a1a1a; }
+        
+        h1 { font-size: 2em; font-weight: 900; }
+        
+        .toggle-btn {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            background: #ddd;
+            color: #000;
+        }
+        
+        .toggle-btn.active {
+            background: #000;
+            color: #fff;
+        }
+        
+        body.dark-mode .toggle-btn {
+            background: #333;
+            color: #fff;
+        }
+        
+        body.dark-mode .toggle-btn.active {
+            background: #fff;
+            color: #000;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        body.dark-mode .card {
+            background: #1a1a1a;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .budget-amount {
+            font-size: 2.5em;
+            font-weight: 900;
+            margin: 10px 0;
+        }
+        
+        .budget-bar {
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        body.dark-mode .budget-bar {
+            background: #333;
+        }
+        
+        .budget-progress {
+            height: 100%;
+            background: #ef4444;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .budget-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+        
+        .warning {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 0.9em;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        body.dark-mode .stat-item {
+            background: #1a1a1a;
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 900;
+        }
+        
+        .expense-item {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        
+        body.dark-mode .expense-item {
+            background: #1a1a1a;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .expense-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .expense-icon {
+            font-size: 2em;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .expense-info h4 {
+            font-size: 0.95em;
+            margin-bottom: 4px;
+        }
+        
+        .expense-meta {
+            font-size: 0.8em;
+            opacity: 0.6;
+        }
+        
+        .expense-right {
+            text-align: right;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .expense-amount {
+            font-weight: 700;
+            font-size: 1em;
+        }
+        
+        .btn-delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #ef4444;
+            opacity: 0.6;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            color: #000;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+        
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: #1a1a1a;
+            color: #fff;
+            border-color: #333;
+        }
+        
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            margin-top: 12px;
+            font-size: 15px;
+        }
+        
+        .btn-primary {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        
+        .suggestion-btn {
+            background: #e0e0e0;
+            color: #000;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        body.dark-mode .suggestion-btn {
+            background: #333;
+            color: #fff;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        
+        .status-paid { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .status-planned { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 999;
+        }
+        
+        body.dark-mode .bottom-nav {
+            background: #1a1a1a;
+            border-top-color: #333;
+        }
+        
+        .nav-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #999;
+            padding: 8px 12px;
+            font-weight: 600;
+        }
+        
+        .nav-btn.active {
+            color: #22c55e;
+        }
+        
+        .nav-icon { font-size: 1.5em; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.5;
+        }
+        
+        .chart-item {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        body.dark-mode .chart-item {
+            background: #1a1a1a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Expense Tracker</h1>
+            <div style="display: flex; gap: 8px;">
+                <button class="toggle-btn active" id="darkTheme" onclick="setTheme('dark')">🌙</button>
+                <button class="toggle-btn" id="lightTheme" onclick="setTheme('light')">☀️</button>
+            </div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="tab-content active">
+            <div class="content">
+                <!-- Budget Card -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>📋 Monthly Budget</h3>
+                        <button style="background: none; border: none; cursor: pointer; font-size: 18px;" onclick="showBudgetModal()">✏️</button>
+                    </div>
+                    <div class="budget-amount">৳<span id="dashBudgetUsed">0</span></div>
+                    <div style="opacity: 0.6; font-size: 0.9em;">of ৳<span id="dashBudgetTotal">0</span></div>
+                    <div class="budget-bar">
+                        <div class="budget-progress" id="dashBudgetProgress"></div>
+                    </div>
+                    <div class="budget-info">
+                        <div><span id="dashBudgetPercent">0</span>% used</div>
+                        <div>৳<span id="dashBudgetLeft">0</span> left</div>
+                    </div>
+                    <div class="warning" id="dashWarning" style="display: none;">⚠️ You've exceeded 90% of your budget!</div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Expenses</div>
+                        <div class="stat-value"><span id="dashTotalExpenses">0</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">This Month</div>
+                        <div class="stat-value">৳<span id="dashMonthTotal">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Recent Expenses -->
+                <h3 style="margin: 24px 0 16px 0;">Recent Expenses</h3>
+                <div id="dashRecentExpenses"></div>
+            </div>
+        </div>
+
+        <!-- Add Tab -->
+        <div id="tab-add" class="tab-content">
+            <div class="content">
+                <h2 style="margin-bottom: 20px;">Add Expense</h2>
+                <form id="addExpenseForm" onsubmit="addExpense(event)">
+                    <div class="form-group">
+                        <label>Amount (৳)</label>
+                        <input type="number" id="addAmount" placeholder="0.00" required step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="addDescription" placeholder="What was it for?" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="addCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="food">🍔 Food & Groceries</option>
+                            <option value="transport">🚗 Transport</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="medical">🏥 Medical</option>
+                            <option value="bills">📄 Bills & Utilities</option>
+                            <option value="family">👨‍👩‍👧‍👦 Family</option>
+                            <option value="personal">👤 Personal</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Method</label>
+                        <select id="addPaymentMethod" required>
+                            <option value="">Select Method</option>
+                            <option value="cash">💵 Cash</option>
+                            <option value="bkash">📱 bKash</option>
+                            <option value="nagad">📱 Nagad</option>
+                            <option value="credit-card">💳 Credit Card</option>
+                            <option value="debit-card">💳 Debit Card</option>
+                            <option value="bank-transfer">🏦 Bank Transfer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="addStatus" required>
+                            <option value="paid">✓ Paid</option>
+                            <option value="pending">⏳ Pending</option>
+                            <option value="planned">📋 Planned</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="addNotes" placeholder="Add notes..."></textarea>
+                    </div>
+                    
+                    <label>Quick Add</label>
+                    <div class="suggestions">
+                        <button type="button" class="suggestion-btn" onclick="quickAdd(100, 'Tea', 'food')">☕ Tea</button>
+                        <button type="button" class="suggestion-btn" onclick="quickAdd(150, 'Rickshaw', 'transport')">🚲 Rickshaw</button>
+                        <button type="button" class="suggestion-btn" onclick="quickAdd(500, 'Groceries', 'food')">🥦 Groceries</button>
+                        <button type="button" class="suggestion-btn" onclick="quickAdd(2000, 'Uber', 'transport')">🚗 Uber</button>
+                        <button type="button" class="suggestion-btn" onclick="quickAdd(1500, 'Restaurant', 'food')">🍽️ Food</button>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Add Expense</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- View Tab -->
+        <div id="tab-view" class="tab-content">
+            <div class="content">
+                <h2 style="margin-bottom: 20px;">All Expenses</h2>
+                <input type="text" id="viewSearch" placeholder="Search..." style="margin-bottom: 16px;" onkeyup="updateViewTab()">
+                <select id="viewCategory" onchange="updateViewTab()" style="margin-bottom: 16px;">
+                    <option value="">All Categories</option>
+                    <option value="food">Food</option>
+                    <option value="transport">Transport</option>
+                    <option value="shopping">Shopping</option>
+                    <option value="medical">Medical</option>
+                    <option value="bills">Bills</option>
+                </select>
+                <div id="viewExpensesList"></div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="tab-analytics" class="tab-content">
+            <div class="content">
+                <h2 style="margin-bottom: 20px;">Analytics</h2>
+                
+                <h3 style="margin: 20px 0 16px 0;">Spending by Category</h3>
+                <div id="analyticsCategoryChart"></div>
+                
+                <h3 style="margin: 20px 0 16px 0;">By Payment Method</h3>
+                <div id="analyticsPaymentChart"></div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="tab-content">
+            <div class="content">
+                <h2 style="margin-bottom: 20px;">Settings</h2>
+                
+                <h3 style="margin: 20px 0 16px 0;">💳 Account Details</h3>
+                <div class="form-group">
+                    <label>MTB Account</label>
+                    <input type="number" id="settingsMtb" placeholder="0.00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>EBL Account</label>
+                    <input type="number" id="settingsEbl" placeholder="0.00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Credit Card Available</label>
+                    <input type="number" id="settingsCredit" placeholder="0.00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Cash In Hand</label>
+                    <input type="number" id="settingsCash" placeholder="0.00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Loan Given to Others</label>
+                    <input type="number" id="settingsLoanGiven" placeholder="0.00" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Borrowed From Others</label>
+                    <input type="number" id="settingsBorrowed" placeholder="0.00" step="0.01">
+                </div>
+                
+                <button class="btn btn-primary" onclick="saveAccountDetails()">Save Account Details</button>
+                <button class="btn btn-primary" style="background: #3b82f6;" onclick="exportToCSV()">Export to CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button class="nav-btn active" id="nav-dashboard" onclick="switchTab('dashboard')">
+            <div class="nav-icon">🏠</div>
+            <div>Dashboard</div>
+        </button>
+        <button class="nav-btn" id="nav-add" onclick="switchTab('add')">
+            <div class="nav-icon">➕</div>
+            <div>Add</div>
+        </button>
+        <button class="nav-btn" id="nav-view" onclick="switchTab('view')">
+            <div class="nav-icon">📋</div>
+            <div>View</div>
+        </button>
+        <button class="nav-btn" id="nav-analytics" onclick="switchTab('analytics')">
+            <div class="nav-icon">📊</div>
+            <div>Analytics</div>
+        </button>
+        <button class="nav-btn" id="nav-settings" onclick="switchTab('settings')">
+            <div class="nav-icon">⚙️</div>
+            <div>Settings</div>
+        </button>
+    </div>
+
+    <!-- Budget Modal -->
+    <div id="budgetModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: flex-end; justify-content: center; flex-direction: column;">
+        <div style="background: white; padding: 24px; border-radius: 24px 24px 0 0; width: 100%; max-width: 600px;">
+            <h2 style="margin-bottom: 20px;">Set Monthly Budget</h2>
+            <div class="form-group">
+                <label>Budget Amount (৳)</label>
+                <input type="number" id="budgetModalInput" placeholder="0.00" step="0.01">
+            </div>
+            <button class="btn btn-primary" onclick="saveBudget()">Save Budget</button>
+            <button class="btn" style="background: #e0e0e0; color: #000; margin-top: 8px;" onclick="closeBudgetModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let expenses = [];
+        let monthlyBudget = 0;
+
+        const CATEGORIES = {
+            'food': '🍔', 'transport': '🚗', 'shopping': '🛍️', 'medical': '🏥',
+            'bills': '📄', 'family': '👨‍👩‍👧‍👦', 'personal': '👤', 'other': '📦'
+        };
+
+        function setTheme(theme) {
+            document.getElementById('darkTheme').classList.toggle('active', theme === 'dark');
+            document.getElementById('lightTheme').classList.toggle('active', theme === 'light');
+            document.body.classList.toggle('dark-mode', theme === 'dark');
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.getElementById('nav-' + tabName).classList.add('active');
+            
+            // Update tab content
+            if (tabName === 'dashboard') updateDashboard();
+            else if (tabName === 'view') updateViewTab();
+            else if (tabName === 'analytics') updateAnalytics();
+        }
+
+        function addExpense(e) {
+            e.preventDefault();
+            const expense = {
+                id: Date.now(),
+                amount: parseFloat(document.getElementById('addAmount').value),
+                description: document.getElementById('addDescription').value,
+                category: document.getElementById('addCategory').value,
+                paymentMethod: document.getElementById('addPaymentMethod').value,
+                status: document.getElementById('addStatus').value,
+                notes: document.getElementById('addNotes').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            expenses.push(expense);
+            document.getElementById('addExpenseForm').reset();
+            updateDashboard();
+            alert('Expense added!');
+        }
+
+        function quickAdd(amount, description, category) {
+            document.getElementById('addAmount').value = amount;
+            document.getElementById('addDescription').value = description;
+            document.getElementById('addCategory').value = category;
+        }
+
+        function deleteExpense(id) {
+            if (confirm('Delete this expense?')) {
+                expenses = expenses.filter(e => e.id !== id);
+                updateDashboard();
+                updateViewTab();
+            }
+        }
+
+        function updateDashboard() {
+            const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+            const monthExpenses = expenses.filter(e => new Date(e.timestamp) >= monthStart);
+            const monthTotal = monthExpenses.reduce((s, e) => s + e.amount, 0);
+            
+            const percent = monthlyBudget > 0 ? (monthTotal / monthlyBudget * 100) : 0;
+            const left = Math.max(monthlyBudget - monthTotal, 0);
+            
+            document.getElementById('dashBudgetUsed').textContent = monthTotal.toFixed(2);
+            document.getElementById('dashBudgetTotal').textContent = monthlyBudget.toFixed(2);
+            document.getElementById('dashBudgetProgress').style.width = Math.min(percent, 100) + '%';
+            document.getElementById('dashBudgetPercent').textContent = percent.toFixed(1);
+            document.getElementById('dashBudgetLeft').textContent = left.toFixed(2);
+            document.getElementById('dashWarning').style.display = percent > 90 ? 'block' : 'none';
+            
+            document.getElementById('dashTotalExpenses').textContent = expenses.length;
+            document.getElementById('dashMonthTotal').textContent = monthTotal.toFixed(2);
+            
+            const recent = [...expenses].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
+            document.getElementById('dashRecentExpenses').innerHTML = recent.length ? 
+                recent.map(e => `
+                    <div class="expense-item">
+                        <div class="expense-left">
+                            <div class="expense-icon">${CATEGORIES[e.category] || '📦'}</div>
+                            <div class="expense-info">
+                                <h4>${e.description}</h4>
+                                <div class="expense-meta">${new Date(e.timestamp).toLocaleDateString('en-GB')} • ${e.category}</div>
+                            </div>
+                        </div>
+                        <div class="expense-right">
+                            <div class="expense-amount">৳${e.amount.toFixed(2)}</div>
+                            <button class="btn-delete" onclick="deleteExpense(${e.id})">🗑️</button>
+                        </div>
+                    </div>
+                `).join('') : '<div class="empty-state">No expenses yet</div>';
+        }
+
+        function updateViewTab() {
+            const search = (document.getElementById('viewSearch')?.value || '').toLowerCase();
+            const category = document.getElementById('viewCategory')?.value || '';
+            
+            let filtered = expenses.filter(e =>
+                e.description.toLowerCase().includes(search) &&
+                (category === '' || e.category === category)
+            ).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            document.getElementById('viewExpensesList').innerHTML = filtered.length ?
+                filtered.map(e => `
+                    <div class="expense-item">
+                        <div class="expense-left">
+                            <div class="expense-icon">${CATEGORIES[e.category] || '📦'}</div>
+                            <div class="expense-info">
+                                <h4>${e.description}</h4>
+                                <div class="expense-meta">${new Date(e.timestamp).toLocaleDateString('en-GB')} • ${e.paymentMethod}</div>
+                            </div>
+                        </div>
+                        <div class="expense-right">
+                            <div>
+                                <div class="expense-amount">৳${e.amount.toFixed(2)}</div>
+                                <span class="status-badge status-${e.status}">${e.status}</span>
+                            </div>
+                            <button class="btn-delete" onclick="deleteExpense(${e.id})">🗑️</button>
+                        </div>
+                    </div>
+                `).join('') : '<div class="empty-state">No expenses found</div>';
+        }
+
+        function updateAnalytics() {
+            if (expenses.length === 0) {
+                document.getElementById('analyticsCategoryChart').innerHTML = '<div class="empty-state">No data</div>';
+                document.getElementById('analyticsPaymentChart').innerHTML = '<div class="empty-state">No data</div>';
+                return;
+            }
+
+            const categoryTotals = {};
+            const paymentTotals = {};
+            let totalAmount = 0;
+            
+            expenses.forEach(e => {
+                categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.amount;
+                paymentTotals[e.paymentMethod] = (paymentTotals[e.paymentMethod] || 0) + e.amount;
+                totalAmount += e.amount;
+            });
+            
+            document.getElementById('analyticsCategoryChart').innerHTML = 
+                Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])
+                .map(([cat, total]) => {
+                    const percent = (total / totalAmount * 100).toFixed(1);
+                    return `<div class="chart-item"><div>${CATEGORIES[cat]} ${cat}</div><div>৳${total.toFixed(2)} (${percent}%)</div></div>`;
+                }).join('');
+            
+            document.getElementById('analyticsPaymentChart').innerHTML = 
+                Object.entries(paymentTotals).sort((a, b) => b[1] - a[1])
+                .map(([method, total]) => {
+                    const percent = (total / totalAmount * 100).toFixed(1);
+                    return `<div class="chart-item"><div>${method}</div><div>৳${total.toFixed(2)} (${percent}%)</div></div>`;
+                }).join('');
+        }
+
+        function showBudgetModal() {
+            document.getElementById('budgetModal').style.display = 'flex';
+        }
+
+        function closeBudgetModal() {
+            document.getElementById('budgetModal').style.display = 'none';
+        }
+
+        function saveBudget() {
+            monthlyBudget = parseFloat(document.getElementById('budgetModalInput').value) || 0;
+            document.getElementById('budgetModalInput').value = '';
+            closeBudgetModal();
+            updateDashboard();
+            alert('Budget saved!');
+        }
+
+        function saveAccountDetails() {
+            const details = {
+                mtb: parseFloat(document.getElementById('settingsMtb').value) || 0,
+                ebl: parseFloat(document.getElementById('settingsEbl').value) || 0,
+                credit: parseFloat(document.getElementById('settingsCredit').value) || 0,
+                cash: parseFloat(document.getElementById('settingsCash').value) || 0,
+                loanGiven: parseFloat(document.getElementById('settingsLoanGiven').value) || 0,
+                borrowed: parseFloat(document.getElementById('settingsBorrowed').value) || 0
+            };
+            
+            const total = details.mtb + details.ebl + details.credit + details.cash - details.loanGiven - details.borrowed;
+            alert(`Account details saved!\nTotal: ৳${total.toFixed(2)}`);
+        }
+
+        function exportToCSV() {
+            if (expenses.length === 0) {
+                alert('No expenses to export');
+                return;
+            }
+            
+            const csv = "Date,Description,Amount,Category,Status,Payment Method\n" + 
+                expenses.map(e => {
+                    const date = new Date(e.timestamp).toLocaleDateString('en-GB');
+                    return `${date},${e.description},৳${e.amount.toFixed(2)},${e.category},${e.status},${e.paymentMethod}`;
+                }).join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `expenses_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('Exported successfully!');
+        }
+
+        // Initialize
+        setTheme('dark');
+        updateDashboard();
+    </script>
+</body>
+</html>
